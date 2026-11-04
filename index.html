@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portfolio | Aoi Yamamoto</title>
+  <meta name="description" content="Web Designer & Front-end Developer">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Noto+Sans+JP:wght@300;400;500&family=Noto+Serif+JP:wght@300;400;600&display=swap" rel="stylesheet">
+
+  <style>
+/* ═══════════════════════════════════════════════════
+   RESET & VARIABLES
+═══════════════════════════════════════════════════ */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --ink:    #323131;
+  --washi:  #F8F5F0;
+  --kincha: #ff5e5e;
+  --kiri:   #7b7373;
+  --panel:  #0d0d0d;
+
+  --dur-fast:   250ms;
+  --dur-med:    520ms;
+  --dur-panel:  800ms;
+
+  --ease-expo:  cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-inout: cubic-bezier(0.76, 0, 0.24, 1);
+  --ease-snap:  cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* --- 修正ポイント①: htmlとbodyのスクロールロックの仕組みをWebView向けに最適化 --- */
+html {
+  scroll-behavior: smooth;
+  font-size: 150.5%;
+  overflow: hidden; /* WebViewスクロールバグ対策 */
+}
+
+body {
+  width: 100%;
+  height: 100vh; /* フォールバック */
+  height: 100dvh;
+  overflow: hidden;
+  position: relative; /* 子要素のabsoluteの基準にするため追加 */
+  background: var(--washi);
+  color: var(--ink);
+  font-family: 'Noto Sans JP', sans-serif;
+  font-weight: 300;
+  letter-spacing: 0.05em;
+  line-height: 1.8;
+  -webkit-font-smoothing: antialiased;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  overscroll-behavior: none; /* iOSのバウンススクロール防止 */
+}
+
+
+/* ═══════════════════════════════════════════════════
+   PAGE TRANSITION — SPLIT PANEL WIPE & SHAPES
+═══════════════════════════════════════════════════ */
+#transition-layer {
+  position: fixed; inset: 0; z-index: 9000; pointer-events: none; display: flex; flex-direction: column;
+}
+.t-panel { flex: 1; background: var(--panel); transform: scaleY(0); will-change: transform; }
+.t-panel-top { transform-origin: top; }
+.t-panel-bottom { transform-origin: bottom; }
+
+.t-closing .t-panel-top { animation: panelCloseTop var(--dur-panel) var(--ease-inout) forwards; }
+.t-closing .t-panel-bottom { animation: panelCloseBottom var(--dur-panel) var(--ease-inout) forwards; }
+.t-opening .t-panel-top { transform: scaleY(1); animation: panelOpenTop var(--dur-panel) var(--ease-expo) forwards; }
+.t-opening .t-panel-bottom { transform: scaleY(1); animation: panelOpenBottom var(--dur-panel) var(--ease-expo) forwards; }
+
+@keyframes panelCloseTop { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes panelCloseBottom { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes panelOpenTop { from { transform: scaleY(1); } to { transform: scaleY(0); } }
+@keyframes panelOpenBottom { from { transform: scaleY(1); } to { transform: scaleY(0); } }
+
+.shapes-container {
+  position: absolute; inset: 0; z-index: 9001; opacity: 0; transition: opacity 0.4s ease; overflow: hidden;
+}
+#transition-layer.is-active .shapes-container { opacity: 1; }
+.shape { position: absolute; mix-blend-mode: screen; will-change: transform, border-radius, background-color, width, height; }
+
+.t-label {
+  position: absolute; inset: 0; z-index: 9002; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity var(--dur-fast) ease;
+}
+.t-label.show { opacity: 1; }
+.t-label-inner { text-align: center; }
+.t-label-en {
+  font-family: 'Cormorant Garamond', serif; font-size: clamp(2rem, 5vw, 4rem); font-weight: 300; letter-spacing: 0.08em; color: var(--washi); line-height: 1; display: block; transform: translateY(10px); opacity: 0; transition: transform var(--dur-med) var(--ease-expo), opacity var(--dur-med) ease;
+}
+.t-label-jp {
+  font-family: 'Noto Serif JP', serif; font-size: 0.65rem; letter-spacing: 0.3em; color: var(--kincha); margin-top: 12px; display: block; transform: translateY(6px); opacity: 0; transition: transform var(--dur-med) 80ms var(--ease-expo), opacity var(--dur-med) 80ms ease;
+}
+.t-label.show .t-label-en, .t-label.show .t-label-jp { transform: translateY(0); opacity: 1; }
+
+
+/* ═══════════════════════════════════════════════════
+   NAVIGATION (PC & MOBILE)
+═══════════════════════════════════════════════════ */
+#nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 500;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 24px 6%; transition: background var(--dur-med) ease, backdrop-filter var(--dur-med) ease;
+}
+#nav.scrolled { background: rgba(248, 245, 240, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+#nav-logo { font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; letter-spacing: 0.1em; cursor: pointer; user-select: none; }
+
+#nav-links { display: flex; gap: 40px; list-style: none; }
+.nav-link { font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; text-decoration: none; color: var(--kiri); position: relative; padding-bottom: 5px; transition: color var(--dur-fast) ease; cursor: pointer; }
+.nav-link::before, .nav-link::after { content: ''; position: absolute; bottom: 0; left: 0; height: 1px; width: 100%; }
+.nav-link::before { background: rgba(0,0,0,0.1); }
+.nav-link::after { background: var(--kincha); transform: scaleX(0); transform-origin: right; transition: transform var(--dur-med) var(--ease-expo); }
+.nav-link:hover, .nav-link.active { color: var(--ink); }
+.nav-link:hover::after, .nav-link.active::after { transform: scaleX(1); transform-origin: left; }
+
+#hamburger { display: none; flex-direction: column; gap: 6px; cursor: pointer; background: none; border: none; padding: 4px; z-index: 600; }
+#hamburger span { display: block; width: 24px; height: 1px; background: var(--ink); transition: transform 0.3s ease, opacity 0.3s ease; transform-origin: center; }
+#hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); background: var(--washi); }
+#hamburger.open span:nth-child(2) { opacity: 0; }
+#hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); background: var(--washi); }
+
+#mobile-menu {
+  position: fixed; inset: 0; background: var(--ink); z-index: 550; display: flex; flex-direction: column; align-items: center; justify-content: center; clip-path: circle(0% at 95% 5%); transition: clip-path 0.7s var(--ease-snap);
+}
+#mobile-menu.open { clip-path: circle(150% at 95% 5%); }
+.mobile-nav-item { padding: 20px; width: 100%; text-align: center; cursor: pointer; transform: translateY(20px); opacity: 0; transition: transform 0.5s ease, opacity 0.5s ease; }
+#mobile-menu.open .mobile-nav-item { transform: translateY(0); opacity: 1; }
+#mobile-menu.open .mobile-nav-item:nth-child(1) { transition-delay: 100ms; }
+#mobile-menu.open .mobile-nav-item:nth-child(2) { transition-delay: 150ms; }
+#mobile-menu.open .mobile-nav-item:nth-child(3) { transition-delay: 200ms; }
+#mobile-menu.open .mobile-nav-item:nth-child(4) { transition-delay: 250ms; }
+
+.mobile-nav-item span { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; font-weight: 300; letter-spacing: 0.1em; color: var(--washi); }
+.mobile-nav-item small { display: block; font-size: 0.65rem; letter-spacing: 0.2em; color: var(--kincha); margin-top: 4px; }
+
+
+/* ═══════════════════════════════════════════════════
+   SECTIONS & REVEAL & COMMON TYPOGRAPHY
+═══════════════════════════════════════════════════ */
+.section { 
+  position: fixed; inset: 0; 
+  overflow-y: auto; overflow-x: hidden; 
+  visibility: hidden; 
+  -webkit-overflow-scrolling: touch; /* QRコード等からのWebViewスクロールバグ対策 */
+  overscroll-behavior-y: contain; /* スクロールチェーンの防止 */
+}
+.section.active { visibility: visible; }
+.section-inner { min-height: 100dvh; padding: 130px 8% 80px; max-width: 1200px; margin: 0 auto; }
+
+.sec-eyebrow { display: flex; align-items: center; gap: 16px; font-size: 0.65rem; letter-spacing: 0.26em; text-transform: uppercase; color: var(--kincha); margin-bottom: 20px; }
+.sec-eyebrow::before { content: ''; display: block; width: 32px; height: 1px; background: var(--kincha); }
+.sec-title { font-family: 'Cormorant Garamond', serif; font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 300; line-height: 1.2; margin-bottom: 50px; }
+.sec-title em { font-style: italic; color: var(--kincha); }
+
+.reveal { opacity: 0; transform: translateY(32px); transition: opacity 0.75s var(--ease-expo), transform 0.75s var(--ease-expo); }
+.reveal.in { opacity: 1; transform: translateY(0); }
+
+.pc-only { display: block; }
+.sp-only { display: none; }
+
+
+/* ═══════════════════════════════════════════════════
+   01: HOME
+═══════════════════════════════════════════════════ */
+#sec-home .section-inner { 
+  display: flex; 
+  flex-direction: column; 
+  justify-content: center; 
+  position: relative; 
+}
+.hero-bg-text { position: absolute; right: -2vw; bottom: -4vw; font-family: 'Cormorant Garamond', serif; font-size: clamp(5rem, 18vw, 15rem); color: rgba(0,0,0,0.03); letter-spacing: -0.04em; pointer-events: none; white-space: nowrap; }
+.hero-title {
+  font-family: 'Cormorant Garamond', serif; font-size: clamp(3.4rem, 8.5vw, 8rem);
+  line-height: 1.04; max-width: 700px;
+}
+.hero-sub { margin-top: 24px; font-size: 0.7rem; line-height: 2.0; color: var(--kiri); max-width: 500px; z-index: 10; }
+.hero-actions { display: flex; gap: 40px; margin-top: 48px; z-index: 10; }
+
+.btn-primary { font-size: 0.7rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--washi); background: var(--ink); border: 1px solid var(--ink); padding: 15px 36px; cursor: pointer; transition: all 0.4s var(--ease-expo); }
+.btn-primary:hover { background: var(--kincha); border-color: var(--kincha); letter-spacing: 0.3em; }
+
+
+/* ═══════════════════════════════════════════════════
+   02: WORK
+═══════════════════════════════════════════════════ */
+.works-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; }
+.work-card { position: relative; overflow: hidden; aspect-ratio: 16/11; cursor: pointer; background: #DDD9D2; }
+.work-placeholder { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: transform 0.9s var(--ease-expo); }
+.work-card:nth-child(1) .work-placeholder { background: #E8E5E1; }
+.work-card:nth-child(2) .work-placeholder { background: #DFDBD5; }
+.work-card:nth-child(3) .work-placeholder { background: #D6D1CA; }
+.work-card:nth-child(4) .work-placeholder { background: #CDC8BF; }
+
+.work-card-info { position: absolute; inset: 0; background: rgba(13,13,13,0); display: flex; flex-direction: column; justify-content: flex-end; padding: 28px 32px; transition: background 0.5s ease; }
+.work-card:hover .work-card-info { background: rgba(13,13,13,0.75); }
+.work-card:hover .work-placeholder { transform: scale(1.05); }
+
+.work-tag, .work-name, .work-desc { opacity: 0; transform: translateY(10px); transition: all 0.4s var(--ease-expo); }
+.work-tag { font-size: 0.6rem; letter-spacing: 0.22em; color: var(--kincha); margin-bottom: 6px; }
+.work-name { font-family: 'Noto Serif JP', serif; font-size: 1.15rem; color: #fff; margin-bottom: 8px;}
+.work-desc { font-size: 0.8rem; color: rgba(255,255,255,0.7); line-height: 1.6; }
+.work-card:hover .work-tag, .work-card:hover .work-name, .work-card:hover .work-desc { opacity: 1; transform: translateY(0); }
+
+
+/* ═══════════════════════════════════════════════════
+   PROJECT DETAIL
+═══════════════════════════════════════════════════ */
+.proj-back { display: inline-flex; align-items: center; gap: 10px; font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--kiri); cursor: pointer; margin-bottom: 40px; transition: color var(--dur-fast) ease; border: none; background: none; padding: 0; }
+.proj-back:hover { color: var(--kincha); }
+.proj-hero { width: 100%; aspect-ratio: 21/9; background: #E8E5E1; margin-bottom: 50px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.proj-meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 24px; border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 30px; margin-bottom: 40px; }
+.proj-meta-item small { display: block; font-size: 0.6rem; letter-spacing: 0.2em; color: var(--kiri); text-transform: uppercase; margin-bottom: 6px; }
+.proj-meta-item span { font-size: 0.9rem; color: var(--ink); font-weight: 500; }
+.proj-content { font-size: 0.85rem; line-height: 2.0; color: #444; }
+.proj-content h3 { font-family: 'Noto Serif JP', serif; font-size: 1.2rem; font-weight: 600; margin: 40px 0 16px; color: var(--ink); border-left: 3px solid var(--kincha); padding-left: 15px;}
+.proj-content p { margin-bottom: 20px; }
+.proj-content strong { color: var(--ink); }
+
+
+/* ═══════════════════════════════════════════════════
+   ABOUT (NEW LAYOUT)
+═══════════════════════════════════════════════════ */
+.about-container {
+  display: grid;
+  grid-template-columns: 250px 1fr 220px;
+  gap: 50px;
+  align-items: start;
+}
+
+/* --- Left Column --- */
+.about-left-col {
+  position: relative;
+}
+.about-number-box {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  margin-bottom: 30px;
+}
+.about-number-box .num {
+  font-size: 4rem;
+  font-weight: 600;
+  line-height: 0.8;
+  padding-bottom: 5px;
+}
+.about-number-box .info {
+  display: flex;
+  flex-direction: column;
+}
+.about-number-box .info strong {
+  font-size: 1rem;
+  letter-spacing: 0.05em;
+}
+.about-number-box .info span {
+  font-size: 0.55rem;
+  color: var(--kiri);
+  letter-spacing: 0.05em;
+}
+
+.about-photo-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3/4;
+}
+.photo-bg-red {
+  position: absolute;
+  top: 10%; left: 0; right: 20%; bottom: 0;
+  background-color: #d84b4b;
+  z-index: 1;
+}
+.photo-bg-pattern {
+  position: absolute;
+  top: 0; left: 10%; right: 0; bottom: 15%;
+  background-color: #8bd3d8;
+  background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.6) 0, rgba(255,255,255,0.6) 15px, transparent 15px, transparent 30px);
+  z-index: 2;
+  mix-blend-mode: overlay;
+}
+.profile-img {
+  position: absolute;
+  bottom: 0; left: 15%; width: 75%;
+  z-index: 3;
+  object-fit: cover;
+}
+
+.about-extra-info {
+  margin-top: 50px;
+}
+
+/* --- Middle Column --- */
+.about-mid-col {
+  display: flex;
+  flex-direction: column;
+}
+.about-section-heading {
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  color: var(--ink);
+  margin-bottom: 25px;
+  text-transform: uppercase;
+}
+
+.profile-name-area {
+  margin-bottom: 30px;
+}
+.profile-name-area h2 {
+  font-family: 'Noto Serif JP', serif;
+  font-size: 2rem;
+  font-weight: 400;
+  letter-spacing: 0.3em;
+  margin-bottom: 5px;
+}
+.profile-name-area p {
+  font-size: 0.75rem;
+  letter-spacing: 0.4em;
+  color: var(--kiri);
+  white-space: nowrap; 
+}
+
+.profile-list {
+  font-size: 0.75rem;
+  line-height: 2.2;
+  color: #444;
+  margin-bottom: 40px;
+}
+.profile-list strong {
+  display: inline-block;
+  width: 100px;
+  color: var(--ink);
+}
+
+/* Skill Layout inside About */
+.skill-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px 40px;
+  margin-bottom: 40px;
+}
+.skill-row { 
+  display: flex; 
+  justify-content: flex-start; 
+  align-items: center; 
+  gap: 12px; 
+  padding: 8px 0; 
+}
+.skill-icon {
+  width: 35px;
+  height: 35px; 
+  object-fit: contain; 
+  flex-shrink: 0; 
+}
+.skill-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex-grow: 1;
+  max-width: 120px;
+}
+.skill-bar {
+  width: 100%;
+  height: 6px; 
+  background-color: #dcdcdc; 
+}
+.skill-bar-fill {
+  height: 100%;
+  background-color: var(--ink); 
+  transition: width 1s ease-in-out; 
+}
+.skill-info span {
+  font-size: 0.65rem;
+  color: var(--ink);
+}
+
+.pr-text {
+  font-size: 0.8rem;
+  line-height: 2.0;
+  color: #444;
+}
+
+/* --- Right Column (Snapshots) --- */
+.about-right-wrapper {
+  align-self: stretch;
+  position: relative;
+}
+
+.about-right-col {
+  position: absolute;
+  top: 0; bottom: 0; left: 0; right: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+.about-right-col::-webkit-scrollbar {
+  width: 6px;
+}
+.about-right-col::-webkit-scrollbar-track {
+  background: transparent;
+}
+.about-right-col::-webkit-scrollbar-thumb {
+  background: var(--kiri);
+  border-radius: 10px;
+}
+
+.snapshot-img {
+  width: 100%;
+  height: auto;
+  display: block;
+  background-color: #DFDBD5;
+  border-radius: 4px;
+}
+
+
+/* ═══════════════════════════════════════════════════
+   CONTACT (★はみ出し修正箇所)
+═══════════════════════════════════════════════════ */
+.layout-grid { display: grid; gap: 60px; }
+.contact-lead { font-family: 'Noto Serif JP', serif; font-size: 1.2rem; line-height: 1.6; margin-bottom: 20px; }
+.contact-body { font-size: 0.85rem; line-height: 2.0; color: #555; margin-bottom: 30px; }
+
+.contact-list-item { 
+  display: flex; 
+  align-items: center; 
+  gap: 20px; 
+  padding: 25px 0; 
+  border-bottom: 1px solid rgba(0,0,0,0.1); 
+  text-decoration: none; 
+  color: var(--ink); 
+  transition: gap 0.3s; 
+  width: 100%;             /* 要素の幅を画面内に収める */
+  box-sizing: border-box;  /* パディングを含めて計算 */
+}
+.contact-list-item:hover { gap: 30px; }
+.contact-list-item:first-child { border-top: 1px solid rgba(0,0,0,0.1); }
+
+.contact-icon { 
+  width: 45px; 
+  height: 45px; 
+  border: 1px solid rgba(0,0,0,0.2); 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  border-radius: 50%; 
+  transition: all 0.3s; 
+  font-size: 0.9rem;
+  flex-shrink: 0;          /* アイコンが文字に押されて潰れないようにする */
+}
+.contact-list-item:hover .contact-icon { background: var(--kincha); border-color: var(--kincha); color: #fff; }
+
+.contact-info {
+  flex: 1;                 /* 余ったスペースをテキストエリアに割り当てる */
+  min-width: 0;            /* Flexbox特有の横はみ出しを防ぐ魔法のコード */
+}
+.contact-info small { display: block; font-size: 0.6rem; letter-spacing: 0.2em; color: var(--kiri); text-transform: uppercase; margin-bottom: 4px;}
+.contact-info span { 
+  font-size: 1rem; 
+  display: block;          /* ブロック要素にする */
+  word-break: break-all;   /* メールアドレスなど長い英数字を画面端で強制的に折り返す */
+}
+
+
+/* ═══════════════════════════════════════════════════
+   RESPONSIVE DESIGN
+═══════════════════════════════════════════════════ */
+@media (min-width: 901px) {
+  .layout-grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 900px) {
+  .section-inner { padding: 110px 8% 60px; }
+  
+  #nav-links { display: none; }
+  #hamburger { display: flex; }
+
+  .works-grid { grid-template-columns: 1fr; }
+  .layout-grid { gap: 50px; }
+  
+  .about-container { grid-template-columns: 1fr; gap: 50px; }
+  .about-right-wrapper { display: none; }
+  .about-photo-wrapper { max-width: 400px; margin: 0 auto; }
+  
+  .sec-title { margin-bottom: 40px; }
+  .proj-hero { aspect-ratio: 16/9; }
+}
+
+@media (max-width: 600px) {
+  .section-inner { padding: 90px 6% 50px; }
+  #nav { padding: 15px 6%; }
+  
+  .pc-only { display: none; }
+  .sp-only { display: block; }
+
+  /* スマホでのレスポンシブテキスト・余白の調整 */
+  .hero-title { font-size: 1.8rem; }
+  .hero-sub { font-size: 0.65rem; }
+  .sec-title { font-size: 1.5rem; }
+  
+  .skill-grid { grid-template-columns: 1fr; gap: 10px; }
+  
+  .proj-meta { grid-template-columns: 1fr; gap: 16px; }
+  .mobile-nav-item span { font-size: 1.5rem; }
+  
+  .work-card-info { padding: 20px; }
+
+  /* スマホ特有のレイアウト崩れ対策（画像のはみ出しとテキスト余白の調整） */
+  .about-number-box .num img {
+    width: 70px !important;
+    height: auto !important;
+  }
+  .profile-list p[style] {
+    padding-left: 10px !important;
+    margin-top: 0 !important;
+  }
+}
+  </style>
+</head>
+<body>
+
+<div id="transition-layer">
+  <div class="t-panel t-panel-top"></div>
+  <div class="t-panel t-panel-bottom"></div>
+  
+  <div class="shapes-container">
+    <div class="shape" id="shape1"></div>
+    <div class="shape" id="shape2"></div>
+    <div class="shape" id="shape3"></div>
+  </div>
+
+  <div id="t-label" class="t-label">
+    <div class="t-label-inner">
+      <span id="t-label-en" class="t-label-en"></span>
+      <span id="t-label-jp" class="t-label-jp"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav id="nav">
+  <div id="nav-logo" onclick="navigateTo('home')">Portfolio.</div>
+  
+  <ul id="nav-links">
+    <li><a class="nav-link active" data-target="home" href="#"><b>Home</b></a></li>
+    <li><a class="nav-link" data-target="work" href="#"><b>Work</b></a></li>
+    <li><a class="nav-link" data-target="about" href="#"><b>About</b></a></li>
+    <li><a class="nav-link" data-target="contact" href="#"><b>Contact</b></a></li>
+  </ul>
+
+  <button id="hamburger" aria-label="メニューを開く">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<div id="mobile-menu">
+  <div class="mobile-nav-item" data-target="home">
+    <span>Home</span><small>ホーム</small>
+  </div>
+  <div class="mobile-nav-item" data-target="work">
+    <span>Work</span><small>制作実績</small>
+  </div>
+  <div class="mobile-nav-item" data-target="about">
+    <span>About</span><small>私について</small>
+  </div>
+  <div class="mobile-nav-item" data-target="contact">
+    <span>Contact</span><small>お問い合わせ</small>
+  </div>
+</div>
+
+
+<section class="section active" id="sec-home">
+  <div class="section-inner">
+    <div class="hero-bg-text" aria-hidden="true">PORTFOLIO</div>
+    <!-- 修正：<p>の中に<h3>が入っていたHTMLエラーを修正し、<div>タグへ変更しました -->
+    <div class="hero-eyebrow reveal"><h3>AIT student</h3></div>
+    <h1 class="hero-title reveal">Aoi<br class="pc-only"><em>Yamamoto</em><br>with record.</h1>
+    <p class="hero-sub reveal">
+      私のポートフォリオサイトへようこそ。<br class="pc-only">本サイトでは、大学での学びやこれまでの制作物・活動記録を簡単にまとめています。<br>どうぞごゆっくりご覧ください。
+    </p>
+    <div class="hero-actions reveal">
+      <button class="btn-primary" onclick="navigateTo('work')">View Work</button>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="sec-work">
+  <div class="section-inner">
+    <p class="sec-eyebrow reveal">02 / Work</p>
+    <h2 class="sec-title reveal"><b>Selected </b><em><b>Projects</b></em></h2>
+    <div class="works-grid">
+      
+      <div class="work-card reveal" onclick="openProject(1)">
+        <div class="work-placeholder">
+          <img src="./images/work/work-1.jpg" alt="Project 1" style="width: 100%; height: 100%; object-fit: cover;">
+        </div>
+        <div class="work-card-info">
+          <p class="work-tag">Poster Design</p>
+          <h3 class="work-name">ポスターデザイン</h3>
+          <p class="work-desc">クリックして詳細を見る</p>
+        </div>
+      </div>
+
+      <div class="work-card reveal" onclick="openProject(2)">
+        <div class="work-placeholder">
+          <img src="./images/work/work-02.jpg" alt="Project 2" style="width: 100%; height: 100%; object-fit: cover;">
+        </div>
+        <div class="work-card-info">
+          <p class="work-tag">Image Processing</p>
+          <h3 class="work-name">画像処理</h3>
+          <p class="work-desc">クリックして詳細を見る</p>
+        </div>
+      </div>
+
+      <div class="work-card reveal" onclick="openProject(3)">
+        <div class="work-placeholder">
+          <img src="./images/work/work-03.jpg" alt="Project 3" style="width: 100%; height: 100%; object-fit: cover;">
+        </div>
+        <div class="work-card-info">
+          <p class="work-tag">Game Production</p>
+          <h3 class="work-name">ゲーム制作</h3>
+          <p class="work-desc">クリックして詳細を見る</p>
+        </div>
+      </div>
+
+      <div class="work-card reveal" onclick="openProject(4)">
+        <div class="work-placeholder">
+          <img src="./images/work/work-04.jpg" alt="Project 4" style="width: 100%; height: 100%; object-fit: cover;">
+        </div>
+        <div class="work-card-info">
+          <p class="work-tag">Research Activities</p>
+          <h3 class="work-name">研究活動</h3>
+          <p class="work-desc">クリックして詳細を見る</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section class="section" id="sec-project">
+  <div class="section-inner">
+    
+    <button class="proj-back reveal" onclick="navigateTo('work')">
+      ← Back to Work
+    </button>
+
+    <h2 class="sec-title reveal" id="proj-title">Project Name</h2>
+    
+    <div class="proj-hero reveal" id="proj-hero">
+    </div>
+
+    <div class="proj-meta reveal">
+      <div class="proj-meta-item">
+        <small>Client</small>
+        <span id="proj-client">Company Inc.</span>
+      </div>
+      <div class="proj-meta-item">
+        <small>Role</small>
+        <span id="proj-role">Design / Frontend</span>
+      </div>
+      <div class="proj-meta-item">
+        <small>Year</small>
+        <span id="proj-year">2026</span>
+      </div>
+    </div>
+
+    <div class="proj-content reveal" id="proj-desc">
+    </div>
+
+  </div>
+</section>
+
+
+<section class="section" id="sec-about">
+  <div class="section-inner">
+    <p class="sec-eyebrow reveal">03 / About</p>
+    
+    <div class="about-container">
+      
+      <!-- 左カラム（番号と写真、そして資格・ツール） -->
+      <div class="about-left-col reveal">
+        <div class="about-number-box">
+          <div class="num"> <img src="./images/about/Tag.png" style="width: 110%; height: 130%;" ></div> 
+          <div class="info">
+            <strong>Aoi Yamamoto</strong>
+            <span>AIT student<br>Web Design / Front-end</span>
+          </div>
+        </div>
+
+        <div class="about-photo-wrapper">
+          <div class="photo-bg-red"></div>
+          <div class="photo-bg-pattern"></div>
+          <img src="./images/about/profile.jpg" alt="Aoi Yamamoto" class="profile-img">
+        </div>
+
+        <!-- 資格・使用可能ツール -->
+        <div class="about-extra-info">
+          <h3 class="about-section-heading">資格・使用可能ツール</h3>
+          <div class="profile-list" style="margin-bottom: 0;">
+            <p><strong>資格</strong> </p>・情報セキュリティマネジメント資格 合格</p>・全国珠算教育連盟 全珠連 珠算検定 弍段合格</p>・生成AIパスポート 合格</p>
+            <p><strong>ツール</strong><br> Figma<br> Adobe Illustrator/Photoshop<br> VS Code<br>Canva<br> MAMP(SQL)</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 中央カラム（プロフィール、スキル、自己PR） -->
+      <div class="about-mid-col reveal">
+        
+        <h3 class="about-section-heading">PROFILE</h3>
+        <div class="profile-name-area">
+          <h2>山本 葵</h2>
+          <p>A O I &nbsp; Y A M A M O T O</p>
+        </div>
+
+        <div class="profile-list">
+          <p><strong>生年月日</strong> 2005年 9月 22日</p>
+          <p><strong>過去経歴</strong></p>
+          <p style="padding-left: 100px; margin-top: -20px;">
+            2022年 3月 同朋高等学校 卒業<br>
+            2024年 4月 愛知工業大学 情報科学部 入学<br>
+            現在に至る
+          </p>
+        </div>
+
+        <h3 class="about-section-heading">SKILL</h3>
+        <div class="skill-grid">
+          <!-- Illustrator -->
+          <div class="skill-row">
+            <img src="./images/icon/Ai.png" alt="" class="skill-icon">
+            <div class="skill-info">
+              <div class="skill-bar"><div class="skill-bar-fill" style="width: 80%;"></div></div>
+              <span>Illustrator</span>
+            </div>
+          </div>
+          <!-- Photoshop -->
+          <div class="skill-row">
+            <img src="./images/icon/Ps.png" alt="" class="skill-icon">
+            <div class="skill-info">
+              <div class="skill-bar"><div class="skill-bar-fill" style="width: 65%;"></div></div>
+              <span>Photoshop</span>
+            </div>
+          </div>
+          <!-- HTML/CSS -->
+          <div class="skill-row">
+            <img src="./images/icon/HTML-CSS.png" alt="" class="skill-icon">
+            <div class="skill-info">
+              <div class="skill-bar"><div class="skill-bar-fill" style="width: 90%;"></div></div>
+              <span>HTML / CSS</span>
+            </div>
+          </div>
+          <!-- JavaScript -->
+          <div class="skill-row">
+            <img src="./images/icon/JS.png" alt="" class="skill-icon">
+            <div class="skill-info">
+              <div class="skill-bar"><div class="skill-bar-fill" style="width: 55%;"></div></div>
+              <span>JavaScript</span>
+            </div>
+          </div>
+          <!-- PHP -->
+          <div class="skill-row">
+            <img src="./images/icon/PHP.png" alt="" class="skill-icon">
+            <div class="skill-info">
+              <div class="skill-bar"><div class="skill-bar-fill" style="width: 50%;"></div></div>
+              <span>PHP</span>
+            </div>
+          </div>
+          <!-- C/C++ -->
+          <div class="skill-row">
+            <img src="./images/icon/C:C++.png" alt="" class="skill-icon">
+            <div class="skill-info">
+              <div class="skill-bar"><div class="skill-bar-fill" style="width: 70%;"></div></div>
+              <span>C / C++</span>
+            </div>
+          </div>
+          <!-- Python -->
+          <div class="skill-row">
+            <img src="./images/icon/Phython.png" alt="" class="skill-icon">
+            <div class="skill-info">
+              <div class="skill-bar"><div class="skill-bar-fill" style="width: 30%;"></div></div>
+              <span>Python</span>
+            </div>
+          </div>
+          <!-- Unity -->
+          <div class="skill-row">
+            <img src="./images/icon/Unity.jpeg" alt="" class="skill-icon">
+            <div class="skill-info">
+              <div class="skill-bar"><div class="skill-bar-fill" style="width: 55%;"></div></div>
+              <span>Unity</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 自己PR -->
+        <h3 class="about-section-heading">自己PR</h3>
+        <div class="pr-text">
+          <p style="font-size: 15px;">私の強みは、向上心を持って主体的に学び、より高い目標に向けて努力できることです。
+未経験のデザインソフトを用いた「雑誌のページデザイン」の制作授業で、最高評価の「秀」を獲得した経験がその理由です。当初はデザインに関する知識が全くなく、ソフトも使いこなせずに満足のいく作品が作れませんでした。
+そこで現状を打開するため、まずはソフトの基本機能を一から再確認しました。さらにデザイン性を高めるべく、配色やトーンの心理効果など授業内容を何度も見返して作品に反映させました。また、第三者から見ても美しいレイアウトを追求するため、授業外でも先生や友人に細かくフィードバックを求め、地道に改善を重ねました。
+この常に向上心を持って自主的に新しい知識を吸収する姿勢を活かし、入社後も貴社の業務効率化や業績の向上に貢献してまいります。
+<br></p>
+</div>
+
+      </div>
+
+      <!-- 右カラム（スナップ写真10枚・縦スクロール） -->
+      <div class="about-right-wrapper reveal">
+        <div class="about-right-col">
+          <img src="./images/work/work-01.jpg" alt="snap1" class="snapshot-img">
+          <img src="./images/work/work-02.jpg" alt="snap2" class="snapshot-img">
+          <img src="./images/work/work-03.jpg" alt="snap3" class="snapshot-img">
+          <img src="./images/work/work-04.jpg" alt="snap4" class="snapshot-img">
+          <img src="./images/work/work-05.jpg" alt="snap5" class="snapshot-img">
+          <img src="./images/work/work-06.jpg" alt="snap6" class="snapshot-img">
+          <img src="./images/work/work-07.jpg" alt="snap7" class="snapshot-img">
+          <img src="./images/work/work-08.jpg" alt="snap8" class="snapshot-img">
+          <img src="./images/work/work-09.jpg" alt="snap9" class="snapshot-img">
+          <img src="./images/work/work-10.jpg" alt="snap10" class="snapshot-img">
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section class="section" id="sec-contact">
+  <div class="section-inner">
+    <p class="sec-eyebrow reveal">04 / Contact</p>
+    <h2 class="sec-title reveal"><b>Let's </b><em><b>Connect</b></em></h2>
+    <div class="layout-grid">
+      <div>
+        <p class="contact-lead reveal">ご覧いただきありがとうございました。<br>今後も学びを深め、より一層成長できるよう精進してまいります。</p>
+      </div>
+      
+      <ul style="list-style:none;">
+        <li class="reveal">
+          <a class="contact-list-item" href="mailto:aoi.yamamoto8189@icloud.com">
+            <div class="contact-icon">✉</div>
+            <div class="contact-info">
+              <small>Email</small>
+              <span>aoi.yamamoto8189@icloud.com</span>
+            </div>
+          </a>
+        </li>
+        <li class="reveal">
+          <a class="contact-list-item" href="mailto:x24101xx@aitech.ac.jp">
+            <div class="contact-icon">🎓</div>
+            <div class="contact-info">
+              <small>School Email</small>
+              <span>x24101xx@aitech.ac.jp</span>
+            </div>
+          </a>
+        </li>
+        <li class="reveal">
+          <a class="contact-list-item" href="tel:09037298962">
+            <div class="contact-icon">📞</div>
+            <div class="contact-info">
+              <small>TELL</small>
+              <span>090-3729-8962</span>
+            </div>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+<script>
+'use strict';
+
+/* ═══════════════════════════════════════════════
+   DATA & CONFIG
+═══════════════════════════════════════════════ */
+const SECTIONS = ['home', 'work', 'project', 'about', 'contact'];
+const SECTION_META = {
+  home:    { en: 'Home',    jp: 'ホーム' },
+  work:    { en: 'Work',    jp: '作品集' },
+  project: { en: 'Project', jp: '詳細' },
+  about:   { en: 'About',   jp: 'プロフィール' },
+  contact: { en: 'Contact', jp: 'お問い合わせ' }
+};
+
+const PROJECT_DATA = {
+  1: { 
+    title: "ポスターデザイン", 
+    client: "大学の課題・制作", 
+    role: "Adobe Illustrator Design", 
+    year: "2024", 
+    img: "./images/work/work-01.jpg",
+    overview: {
+      purpose: "視覚的な情報伝達を学び、色彩理論の解説や大学のオープンキャンパスポスターを制作。",
+      concept: "情報を整理し、主題に視線が自然と集まるよう配色とレイアウトを設計。",
+      process: ""
+    },
+    ingenuity: "写真の斜め配置や光が当たる演出など、視覚的なインパクトと構成を追求。視線誘導を意識し、重要な文字情報の強調と画像の切り抜き角度を調整。",
+    challenge: "要素が多く乱雑になる課題に対し、余白の確保と効果的な整列配置で見やすさの確保に努めた。"
+  },
+  2: { 
+    title: "画像処理", 
+    client: "大学の課題・個人制作", 
+    role: "C++ Programming", 
+    year: "2025", 
+    img: "./images/work/work-02-1.jpg",
+    overview: {
+      purpose: "画像平滑化の原理を理解し、ノイズを抑えた正確な輪郭抽出を学ぶこと。",
+      concept: "ガウシアンフィルタでノイズを除去し、輪郭を抽出する画像処理で、フィルタ処理による画像の変化を、段階的に比較・確認しやすく構成。",
+      process: ""
+    },
+    ingenuity: "木の細かな枝の輪郭を残しつつ、ノイズのみを消すパラメータ調整に注力。",
+    challenge: "微細なノイズの誤検出に対し、平滑化の強度と二値化の閾値を見直して解決。"
+  },
+  3: { 
+    title: "ゲーム制作", 
+    client: "個人制作", 
+    role: "Game Programming / Unity", 
+    year: "2025", 
+    img: "./images/work/work-03.jpg",
+    video: "./images/work/x24101_1.mp4", 
+    overview: {
+      purpose: "日本の伝統的なお祭りをモチーフにした、3Dリズムアクションゲームの制作。",
+      concept: "お囃子のリズムに乗って出現する障害物を避け、祭りの漢字の迷路になっているコースを走りゴールを目指す。",
+      process: ""
+    },
+    ingenuity: "提灯や屋台を配置し、お祭り特有の賑やかで非日常的な空間の再現に注力。リズムに合わせた障害物の出現と、クリア後にコースの漢字全体を見せる演出。",
+    challenge: "音楽と障害物出現の同期ズレに対し、プログラムの数値を細かく整え、タイミングの微調整を繰り返し解決。"
+  },
+  4: { 
+    title: "研究活動", 
+    client: "大学研究室", 
+    role: "Research & Analysis", 
+    year: "2026", 
+    img: "./images/work/work-04.jpg",
+    video: "./images/work/gaiyou.mov", 
+    overview: {
+      purpose: "言葉と色彩のイメージの対応を検証し、直感的なWeb生成を目指す。そこから、ユーザーが抱く色のイメージや、言葉そのものへのイメージを探る。",
+      concept: "ユーザーの抽象的な要望を要素分解し、具体的な選択肢へ落とし込む。",
+      process: ""
+    },
+    ingenuity: "提案時のローディングや、デザインがリアルタイムに変わるUIの実装。アンケートで言葉と色の結びつきを調査し、生成の質を高めた。",
+    challenge: "人によるイメージの違いを、丁寧なアンケート調査と分析で分析。この研究は途中の段階であるため、今後さらに色と言葉のイメージの対応関係に関するデータを集めていく予定。"
+  }
+};
+
+const T_CLOSE = 800;
+const T_HOLD  = 400;
+const T_OPEN  = 800;
+
+let current = 'home';
+let transitioning = false;
+
+const transLayer = document.getElementById('transition-layer');
+const tLabel     = document.getElementById('t-label');
+const tLabelEn   = document.getElementById('t-label-en');
+const tLabelJp   = document.getElementById('t-label-jp');
+
+
+/* ═══════════════════════════════════════════════
+   SHAPE ANIMATION
+═══════════════════════════════════════════════ */
+const shapeStates = {
+  home: [
+    { w: "40vw", h: "40vw", x: "10vw", y: "10vh", bg: "rgba(0, 140, 110, 0.9)", br: "50%" },
+    { w: "50vw", h: "50vw", x: "50vw", y: "40vh", bg: "rgba(0, 80, 160, 0.9)", br: "50%" },
+    { w: "20vw", h: "20vw", x: "40vw", y: "70vh", bg: "rgba(220, 150, 0, 0.8)", br: "50%" }
+  ],
+  work: [
+    { w: "30vw", h: "30vw", x: "60vw", y: "10vh", bg: "rgba(200, 50, 50, 0.9)", br: "0%" },
+    { w: "40vw", h: "40vw", x: "10vw", y: "50vh", bg: "rgba(0, 140, 110, 0.9)", br: "50%" },
+    { w: "60vw", h: "60vw", x: "40vw", y: "60vh", bg: "rgba(0, 80, 160, 0.7)", br: "0%" }
+  ],
+  project: [
+    { w: "70vw", h: "70vw", x: "20vw", y: "-10vh", bg: "rgba(220, 150, 0, 0.8)", br: "50%" },
+    { w: "30vw", h: "30vw", x: "70vw", y: "50vh", bg: "rgba(200, 50, 50, 0.9)", br: "0%" },
+    { w: "50vw", h: "50vw", x: "-10vw", y: "60vh", bg: "rgba(0, 140, 110, 0.8)", br: "50%" }
+  ],
+  about: [
+    { w: "50vw", h: "50vw", x: "10vw", y: "20vh", bg: "rgba(100, 100, 120, 0.9)", br: "0%" },
+    { w: "40vw", h: "40vw", x: "60vw", y: "10vh", bg: "rgba(200, 150, 100, 0.9)", br: "0%" },
+    { w: "40vw", h: "40vw", x: "40vw", y: "60vh", bg: "rgba(0, 140, 110, 0.8)", br: "50%" }
+  ],
+  contact: [
+    { w: "100vw", h: "100vw", x: "10vw", y: "10vh", bg: "rgba(0, 80, 160, 0.8)", br: "50%" },
+    { w: "30vw", h: "30vw", x: "10vw", y: "60vh", bg: "rgba(200, 50, 50, 0.9)", br: "50%" },
+    { w: "20vw", h: "20vw", x: "70vw", y: "70vh", bg: "rgba(220, 150, 0, 0.9)", br: "0%" }
+  ]
+};
+
+function triggerShapes(targetSec) {
+  const states = shapeStates[targetSec] || shapeStates['home'];
+  states.forEach((st, i) => {
+    gsap.to(`#shape${i+1}`, {
+      width: st.w, height: st.h, x: st.x, y: st.y,
+      backgroundColor: st.bg, borderRadius: st.br,
+      duration: 1.5, ease: "power3.inOut"
+    });
+  });
+}
+triggerShapes('home');
+
+
+/* ═══════════════════════════════════════════════
+   TRANSITION ENGINE
+═══════════════════════════════════════════════ */
+function navigateTo(target) {
+  if (target === current || transitioning) return;
+  transitioning = true;
+
+  const meta = SECTION_META[target];
+  tLabelEn.textContent = meta.en;
+  tLabelJp.textContent = meta.jp;
+
+  transLayer.classList.add('is-active', 't-closing');
+  triggerShapes(target);
+
+  setTimeout(() => { tLabel.classList.add('show'); }, T_CLOSE * 0.4);
+
+  setTimeout(() => {
+    document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+    document.getElementById(`sec-${target}`).classList.add('active');
+    document.getElementById(`sec-${target}`).scrollTop = 0;
+    
+    current = target;
+    
+    document.querySelectorAll('.nav-link').forEach(a => {
+      a.classList.toggle('active', a.dataset.target === target);
+    });
+
+    tLabel.classList.remove('show');
+    
+    requestAnimationFrame(() => {
+      transLayer.classList.remove('t-closing');
+      transLayer.classList.add('t-opening');
+    });
+
+    setTimeout(() => {
+      transLayer.className = '';
+      transitioning = false;
+      triggerReveal(target);
+    }, T_OPEN);
+
+  }, T_CLOSE + T_HOLD);
+}
+
+function openProject(id) {
+  const data = PROJECT_DATA[id];
+  if(!data) return;
+
+  document.getElementById('proj-title').innerText = data.title;
+  document.getElementById('proj-client').innerText = data.client;
+  document.getElementById('proj-role').innerText = data.role;
+  document.getElementById('proj-year').innerText = data.year;
+  
+  const heroContainer = document.getElementById('proj-hero');
+  if (data.video) {
+    heroContainer.innerHTML = `<video src="${data.video}" controls autoplay muted loop playsinline style="width: 100%; height: 100%; object-fit: contain;"></video>`;
+  } else {
+    heroContainer.innerHTML = `<img src="${data.img}" alt="${data.title}" style="width: 100%; height: 100%; object-fit: contain;">`;
+  }
+
+  const descContainer = document.getElementById('proj-desc');
+  descContainer.innerHTML = `
+    <h3>プロジェクト概要・コンセプト</h3>
+    <p>
+      <strong>目的（どのような課題を解決するために作ったか）：</strong><br>${data.overview.purpose}<br><br>
+      <strong>コンセプト・デザイン意図：</strong><br>${data.overview.concept}<br><br>
+      <strong>制作のプロセスと自身のこだわり：</strong><br>${data.overview.process}
+    </p>
+    
+    <h3>工夫したポイント</h3>
+    <p>${data.ingenuity}</p>
+    
+    <h3>直面した課題と解決策</h3>
+    <p>${data.challenge}</p>
+  `;
+
+  SECTION_META['project'].jp = data.title; 
+
+  navigateTo('project');
+}
+
+function triggerReveal(target) {
+  const sec = document.getElementById(`sec-${target}`);
+  if (!sec) return;
+  const items = sec.querySelectorAll('.reveal');
+  items.forEach(el => el.classList.remove('in'));
+  
+  requestAnimationFrame(() => {
+    items.forEach((el, i) => {
+      setTimeout(() => el.classList.add('in'), 100 + i * 80);
+    });
+  });
+}
+
+
+/* ═══════════════════════════════════════════════
+   MOBILE MENU
+═══════════════════════════════════════════════ */
+const hamburger = document.getElementById('hamburger');
+const mobileMenu = document.getElementById('mobile-menu');
+
+function toggleMenu() {
+  const isOpen = mobileMenu.classList.toggle('open');
+  hamburger.classList.toggle('open', isOpen);
+}
+
+hamburger.addEventListener('click', toggleMenu);
+
+document.querySelectorAll('.mobile-nav-item').forEach(item => {
+  item.addEventListener('click', () => {
+    const target = item.dataset.target;
+    toggleMenu(); 
+    setTimeout(() => navigateTo(target), 400); 
+  });
+});
+
+
+/* ═══════════════════════════════════════════════
+   INIT & EVENT LISTENERS
+═══════════════════════════════════════════════ */
+document.querySelectorAll('.nav-link').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    navigateTo(a.dataset.target);
+  });
+});
+
+window.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => triggerReveal('home'), 300);
+});
+
+</script>
+</body>
+</html>
